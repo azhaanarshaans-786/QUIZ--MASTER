@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Master</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f0f5f1;
+    color: #173b2b;
+    text-align: center;
+}
+
+header {
+    background: #064e3b;
+    color: white;
+    padding: 25px 10px;
+}
+
+.logo {
+    display: inline-flex;
+    width: 65px;
+    height: 65px;
+    border: 3px solid #facc15;
+    border-radius: 50%;
+    justify-content: center;
+    align-items: center;
+    color: #facc15;
+    font-size: 35px;
+    font-weight: bold;
+}
+
+header h1 {
+    margin: 10px 0 5px;
+}
+
+header p {
+    color: #facc15;
+}
+
+.container {
+    max-width: 750px;
+    margin: 25px auto;
+    padding: 15px;
+}
+
+.card {
+    background: white;
+    padding: 22px;
+    margin-bottom: 20px;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px #00000012;
+}
+
+input, select, button {
+    padding: 12px;
+    margin: 6px;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+input {
+    width: min(90%, 350px);
+    border: 1px solid #aaa;
+}
+
+button {
+    background: #047857;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #065f46;
+}
+
+.category {
+    width: min(100%, 230px);
+    min-height: 65px;
+    font-weight: bold;
+    background: #064e3b;
+    border: 2px solid #d4a017;
+}
+
+.option {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    background: #e8f5ee;
+    color: #173b2b;
+    border: 1px solid #a7d7bb;
+    text-align: left;
+}
+
+.option:hover {
+    background: #c9ecd8;
+}
+
+#quiz, #result, #admin {
+    display: none;
+}
+
+#message {
+    font-weight: bold;
+}
+
+footer {
+    padding: 20px;
+    color: #557064;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">Q</div>
+    <h1>QUIZ MASTER</h1>
+    <p>Challenge Your Knowledge • Become a Champion!</p>
+</header>
+
+<div class="container">
+
+<section class="card" id="welcome">
+    <h2>Welcome to Quiz Master</h2>
+    <p>Enter your name to begin.</p>
+    <input id="playerName" placeholder="Enter your name">
+    <br>
+    <button onclick="startMenu()">Start Quiz</button>
+</section>
+
+<section class="card" id="categories">
+    <h2>Choose Your Quiz Category</h2>
+    <div id="categoryButtons"></div>
+    <button onclick="showLeaderboard()">View Leaderboard</button>
+    <button onclick="openAdmin()">Admin Dashboard</button>
+</section>
+
+<section class="card" id="quiz">
+    <h2 id="quizTitle">Quiz</h2>
+    <p>
+        Question <span id="questionNumber">1</span>
+        of <span id="totalQuestions">5</span>
+    </p>
+    <h3 id="questionText"></h3>
+    <div id="options"></div>
+    <p id="message"></p>
+    <button id="nextButton" onclick="nextQuestion()" disabled>
+        Next Question
+    </button>
+</section>
+
+<section class="card" id="result">
+    <h2>Quiz Completed!</h2>
+    <h3 id="finalScore"></h3>
+    <p id="finalMessage"></p>
+    <button onclick="backToCategories()">Choose Another Quiz</button>
+</section>
+
+<section class="card" id="leaderboard" style="display:none">
+    <h2>Leaderboard</h2>
+    <div id="leaderboardData"></div>
+    <button onclick="backToCategories()">Back</button>
+</section>
+
+<section class="card" id="admin">
+    <h2>Admin Dashboard</h2>
+    <p>Demo PIN: <strong>1234</strong></p>
+    <input id="adminPin" type="password" placeholder="Enter admin PIN">
+    <button onclick="checkAdmin()">Login</button>
+    <div id="adminData"></div>
+    <button onclick="backToCategories()">Back</button>
+</section>
+
+</div>
+
+<footer>© 2026 Quiz Master | Learn • Play • Win</footer>
+
+<script>
+const quizzes = {
+    "General Knowledge": [
+        {q:"What is the capital of India?",o:["Mumbai","New Delhi","Chennai","Kolkata"],a:1},
+        {q:"How many days are in a leap year?",o:["365","364","366","360"],a:2},
+        {q:"Which is the largest ocean?",o:["Indian","Atlantic","Arctic","Pacific"],a:3},
+        {q:"Which planet is called the Red Planet?",o:["Venus","Mars","Jupiter","Saturn"],a:1},
+        {q:"How many colours are traditionally in a rainbow?",o:["5","6","7","8"],a:2}
+    ],
+    "Science": [
+        {q:"What is the chemical formula of water?",o:["CO2","H2O","O2","NaCl"],a:1},
+        {q:"Which planet is closest to the Sun?",o:["Earth","Venus","Mercury","Mars"],a:2},
+        {q:"What gas do plants absorb?",o:["Oxygen","Carbon dioxide","Hydrogen","Helium"],a:1},
+        {q:"What is the unit of force?",o:["Joule","Newton","Watt","Volt"],a:1},
+        {q:"Which organ pumps blood?",o:["Lungs","Brain","Heart","Kidney"],a:2}
+    ],
+    "Technology": [
+        {q:"What does CPU stand for?",o:["Central Processing Unit","Computer Power Utility","Control Program User","Central Print Unit"],a:0},
+        {q:"Which language structures web pages?",o:["HTML","SQL","C","Bash"],a:0},
+        {q:"What does URL stand for?",o:["Uniform Resource Locator","Universal Record Link","User Reading List","United Resource Line"],a:0},
+        {q:"Which company develops Windows?",o:["Apple","Google","Microsoft","Samsung"],a:2},
+        {q:"Which device moves a pointer on a computer?",o:["Printer","Mouse","Speaker","Scanner"],a:1}
+    ],
+    "History": [
+        {q:"Who was the first Prime Minister of India?",o:["Mahatma Gandhi","Jawaharlal Nehru","Sardar Patel","B. R. Ambedkar"],a:1},
+        {q:"In which year did India become independent?",o:["1945","1947","1950","1952"],a:1},
+        {q:"Where is the Taj Mahal?",o:["Delhi","Jaipur","Agra","Mumbai"],a:2},
+        {q:"Who is known as the Iron Man of India?",o:["Sardar Patel","Subhas Chandra Bose","Bhagat Singh","Lal Bahadur Shastri"],a:0},
+        {q:"Which ancient civilization built the pyramids of Giza?",o:["Roman","Egyptian","Greek","Mayan"],a:1}
+    ],
+    "Sports": [
+        {q:"How many players are on a cricket team on the field?",o:["9","10","11","12"],a:2},
+        {q:"How many rings are on the Olympic symbol?",o:["4","5","6","7"],a:1},
+        {q:"Which sport uses a shuttlecock?",o:["Tennis","Badminton","Hockey","Golf"],a:1},
+        {q:"What is the national sport traditionally associated with Japan?",o:["Sumo","Cricket","Baseball","Football"],a:0},
+        {q:"How many players from one team are on court in basketball?",o:["5","6","7","11"],a:0}
+    ],
+    "Mathematics": [
+        {q:"What is 12 × 8?",o:["86","92","96","108"],a:2},
+        {q:"What is the square root of 144?",o:["10","11","12","14"],a:2},
+        {q:"What is 25% of 200?",o:["25","40","50","75"],a:2},
+        {q:"How many sides does a hexagon have?",o:["5","6","7","8"],a:1},
+        {q:"What is 15 + 27?",o:["32","42","40","52"],a:1}
+    ],
+    "Quran Quiz": [
+        {q:"How many Surahs are in the Quran?",o:["110","112","114","116"],a:2},
+        {q:"Which is the first Surah in the Quran?",o:["Al-Baqarah","Al-Fatihah","Al-Ikhlas","An-Nas"],a:1},
+        {q:"Which Surah is the longest in the Quran?",o:["Al-Imran","Al-Kahf","Al-Baqarah","Yasin"],a:2},
+        {q:"Which Surah is named after Maryam?",o:["Maryam","Al-Ma'idah","An-Nisa","Al-Ahzab"],a:0},
+        {q:"Which month do Muslims fast in?",o:["Shawwal","Rajab","Ramadan","Safar"],a:2}
+    ]
+};
+
+let player = "";
+let currentCategory = "";
+let questions = [];
+let questionIndex = 0;
+let score = 0;
+let answered = false;
+
+function hideAll() {
+    ["welcome","categories","quiz","result","leaderboard","admin"]
+    .forEach(id => document.getElementById(id).style.display = "none");
+}
+
+function startMenu() {
+    player = document.getElementById("playerName").value.trim();
+
+    if (!player) {
+        alert("Please enter your name first!");
+        return;
+    }
+
+    hideAll();
+    document.getElementById("categories").style.display = "block";
+}
+
+function makeCategories() {
+    const area = document.getElementById("categoryButtons");
+    area.innerHTML = "";
+
+    Object.keys(quizzes).forEach(category => {
+        const button = document.createElement("button");
+        button.className = "category";
+        button.textContent = category;
+        button.onclick = () => startQuiz(category);
+        area.appendChild(button);
+    });
+}
+
+function startQuiz(category) {
+    currentCategory = category;
+    questions = quizzes[category];
+    questionIndex = 0;
+    score = 0;
+
+    hideAll();
+    document.getElementById("quiz").style.display = "block";
+    document.getElementById("quizTitle").textContent = category;
+    document.getElementById("totalQuestions").textContent = questions.length;
+
+    showQuestion();
+}
+
+function showQuestion() {
+    answered = false;
+    const q = questions[questionIndex];
+
+    document.getElementById("questionNumber").textContent = questionIndex + 1;
+    document.getElementById("questionText").textContent = q.q;
+    document.getElementById("message").textContent = "";
+    document.getElementById("nextButton").disabled = true;
+    document.getElementById("nextButton").textContent =
+        questionIndex === questions.length - 1 ? "See Results" : "Next Question";
+
+    const area = document.getElementById("options");
+    area.innerHTML = "";
+
+    q.o.forEach((option, index) => {
+        const button = document.createElement("button");
+        button.className = "option";
+        button.textContent = String.fromCharCode(65 + index) + ". " + option;
+        button.onclick = () => chooseAnswer(index);
+        area.appendChild(button);
+    });
+}
+
+function chooseAnswer(index) {
+    if (answered) return;
+    answered = true;
+
+    const q = questions[questionIndex];
+    const buttons = document.querySelectorAll("#options button");
+
+    buttons.forEach(button => button.disabled = true);
+
+    if (index === q.a) {
+        score++;
+        document.getElementById("message").textContent = "Correct answer!";
+        document.getElementById("message").style.color = "green";
+        buttons[index].style.background = "#15803d";
+        buttons[index].style.color = "white";
+    } else {
+        document.getElementById("message").textContent =
+            "Incorrect. Correct answer: " + q.o[q.a];
+        document.getElementById("message").style.color = "red";
+        buttons[index].style.background = "#dc2626";
+        buttons[index].style.color = "white";
+        buttons[q.a].style.background = "#15803d";
+        buttons[q.a].style.color = "white";
+    }
+
+    document.getElementById("nextButton").disabled = false;
+}
+
+function nextQuestion() {
+    if (!answered) return;
+
+    questionIndex++;
+
+    if (questionIndex < questions.length) {
+        showQuestion();
+    } else {
+        showResult();
+    }
+}
+
+function showResult() {
+    hideAll();
+    document.getElementById("result").style.display = "block";
+
+    const total = questions.length;
+    const percent = Math.round((score / total) * 100);
+
+    document.getElementById("finalScore").textContent =
+        player + ", your score is " + score + " / " + total;
+
+    document.getElementById("finalMessage").textContent =
+        "Accuracy: " + percent + "% — " +
+        (percent >= 80 ? "Excellent work!" :
+         percent >= 50 ? "Good effort! Keep practising." :
+         "Keep learning and try again!");
+
+    const records = JSON.parse(localStorage.getItem("quizScores") || "[]");
+    records.push({
+        name: player,
+        category: currentCategory,
+        score: score,
+        total: total,
+        date: new Date().toLocaleDateString()
+    });
+
+    localStorage.setItem("quizScores", JSON.stringify(records));
+}
+
+function showLeaderboard() {
+    hideAll();
+    document.getElementById("leaderboard").style.display = "block";
+
+    const records = JSON.parse(localStorage.getItem("quizScores") || "[]");
+    records.sort((a,b) => (b.score / b.total) - (a.score / a.total));
+
+    const area = document.getElementById("leaderboardData");
+
+    if (records.length === 0) {
+        area.textContent = "No quiz results yet. Play a quiz first!";
+        return;
+    }
+
+    area.innerHTML = "";
+    const table = document.createElement("table");
+    table.style.width = "100%";
+    table.border = "1";
+
+    const header = table.insertRow();
+    ["Player","Category","Score","Date"].forEach(text => {
+        const cell = document.createElement("th");
+        cell.textContent = text;
+        header.appendChild(cell);
+    });
+
+    records.forEach(record => {
+        const row = table.insertRow();
+        [record.name,record.category,record.score + "/" + record.total,record.date]
+        .forEach(value => {
+            const cell = row.insertCell();
+            cell.textContent = value;
+        });
+    });
+
+    area.appendChild(table);
+}
+
+function openAdmin() {
+    hideAll();
+    document.getElementById("admin").style.display = "block";
+}
+
+function checkAdmin() {
+    if (document.getElementById("adminPin").value !== "1234") {
+        alert("Incorrect PIN!");
+        return;
+    }
+
+    const records = JSON.parse(localStorage.getItem("quizScores") || "[]");
+    const area = document.getElementById("adminData");
+
+    area.innerHTML = "";
+    const heading = document.createElement("h3");
+    heading.textContent = "Admin Summary";
+    area.appendChild(heading);
+
+    const summary = document.createElement("p");
+    summary.textContent = "Total quiz attempts on this browser: " + records.length;
+    area.appendChild(summary);
+
+    const clearButton = document.createElement("button");
+    clearButton.textContent = "Clear All Local Results";
+    clearButton.onclick = () => {
+        if (confirm("Delete all quiz results saved in this browser?")) {
+            localStorage.removeItem("quizScores");
+            area.textContent = "Local results cleared.";
+        }
+    };
+    area.appendChild(clearButton);
+}
+
+function backToCategories() {
+    hideAll();
+    document.getElementById("categories").style.display = "block";
+}
+
+makeCategories();
+</script>
+
+</body>
+</html>
